@@ -38,25 +38,24 @@ func (g *Game) LivingNeighbours(x, y int) int {
 	return livingNeighbours
 }
 
-func (g Game) NextGen(cell Cell, livingNeighbours int) Cell {
-	if !cell && livingNeighbours == 3 {
+func (c Cell) Update(livingNeighbours int) {
+	if !c && livingNeighbours == 3 {
 		// Gets born
-		return true
+		c = true
 	}
-	if cell && livingNeighbours < 2 {
+	if c && livingNeighbours < 2 {
 		// Dead by loneliness
-		return false
+		c = false
 	}
-	if cell && (livingNeighbours == 2 || livingNeighbours == 3) {
+	if c && (livingNeighbours == 2 || livingNeighbours == 3) {
 		// Stay alive
-		return true
+		c = true
 	}
-	if cell && livingNeighbours > 3 {
+	if c && livingNeighbours > 3 {
 		// Overpopulation
-		return false
+		c = false
 	}
 	// Keep status
-	return cell
 }
 
 func (g Game) safeGet(x, y int) Cell {
@@ -72,7 +71,7 @@ func (g Game) safeGet(x, y int) Cell {
 func (g Game) Round() {
 	for y := 0; y < len(g); y++ {
 		for x := 0; x < len(g[y]); x++ {
-			g[y][x] = g.NextGen(g[y][x], g.LivingNeighbours(x, y))
+			g[y][x].Update(g.LivingNeighbours(x, y))
 		}
 	}
 }
