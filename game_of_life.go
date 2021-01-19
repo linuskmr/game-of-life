@@ -5,7 +5,12 @@ import (
 	"strings"
 )
 
-type Game [][]Cell
+type Game struct {
+	// Current is the current game state
+	Current [][]Cell
+	// buffer for computing a new state
+	buffer [][]Cell
+}
 
 type Cell bool
 
@@ -17,6 +22,7 @@ func (c Cell) String() string {
 	}
 }
 
+// Int converts a living Cell into a one and a dead one into a zero.
 func (c Cell) Int() int {
 	if c {
 		return 1
@@ -25,6 +31,8 @@ func (c Cell) Int() int {
 	}
 }
 
+// LivingNeighbours counts the numbers of living neighbour Cells in the top, right,
+// bottom, left and each corner.
 func (g *Game) LivingNeighbours(x, y int) int {
 	livingNeighbours := 0
 	for yDelta := -1; yDelta <= 1; yDelta++ {
@@ -38,50 +46,76 @@ func (g *Game) LivingNeighbours(x, y int) int {
 	return livingNeighbours
 }
 
-func (c Cell) Update(livingNeighbours int) {
+// Update's a Cell considering its number of living neighbours.
+func (c Cell) Update(livingNeighbours int) Cell {
 	if !c && livingNeighbours == 3 {
 		// Gets born
-		c = true
+		return true
 	}
 	if c && livingNeighbours < 2 {
 		// Dead by loneliness
-		c = false
+		return false
 	}
 	if c && (livingNeighbours == 2 || livingNeighbours == 3) {
 		// Stay alive
-		c = true
+		return true
 	}
 	if c && livingNeighbours > 3 {
 		// Overpopulation
-		c = false
+		return false
 	}
 	// Keep status
+	return c
 }
 
+// safeGet returns the Cell at the specified position
+// or a dead Cell if the position is out of bounds.
 func (g Game) safeGet(x, y int) Cell {
-	if y < 0 || y >= len(g) {
+	// Check if index is out of bounds
+	// Return false as default
+	if y < 0 || y >= len(g.Current) {
 		return false
 	}
-	if x < 0 || x >= len(g[y]) {
+	if x < 0 || x >= len(g.Current[y]) {
 		return false
 	}
-	return g[y][x]
+	return g.Current[y][x]
 }
 
-func (g Game) Round() {
+// Update computes a new state of the game.
+func (g Game) Update() {
+	// Update each cell
 	for y := 0; y < len(g); y++ {
 		for x := 0; x < len(g[y]); x++ {
-			g[y][x].Update(g.LivingNeighbours(x, y))
+			// Write the updated cell to the buffer
+			g.buffer[y][x] = g.Current[y][x].Update(g.LivingNeighbours(x, y))
 		}
+	}
+
+	// Reassign the current game
+	g.Current = g.buffer
+}
+
+// NewGame creates a new game.
+func NewGame(game [][]Cell) {
+	// Create buffer of same size as the game
+	buffer := make([][]Cell, len(g))
+	for i := range a {
+		buffer[i] = make([]Cell, len(g[i]))
+	}
+
+	return Game {
+		Current: game,
+		buffer: buffer,
 	}
 }
 
 func (g Game) String() string {
-	output := make([]string, len(g))
-	for y := 0; y < len(g); y++ {
+	output := make([]string, len(g.Current))
+	for y := 0; y < len(g.Current); y++ {
 		var line strings.Builder
-		for x := 0; x < len(g[y]); x++ {
-			line.WriteString(g[y][x].String())
+		for x := 0; x < len(g.Current[y]); x++ {
+			line.WriteString(g.Current[y][x].String())
 		}
 		output[y] = line.String()
 	}
@@ -89,10 +123,10 @@ func (g Game) String() string {
 }
 
 func main() {
-	g := Game{{false, false, false}, {false, false, false}, {true, true, true}}
+	g := NewGame{{false, false, false}, {false, false, false}, {true, true, true}}
 	fmt.Println("Round 1")
 	fmt.Println(g.String())
-	g.Round()
+	g.Update()
 	fmt.Println("Round 2")
 	fmt.Println(g.String())
 }
