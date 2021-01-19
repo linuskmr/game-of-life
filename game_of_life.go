@@ -5,15 +5,19 @@ import (
 	"strings"
 )
 
+// Game holds the Cells of the game of life.
 type Game struct {
-	// Current is the current game state
+	// Current is the current game state.
 	Current [][]Cell
-	// buffer for computing a new state
+	// buffer for computing a new state.
 	buffer [][]Cell
 }
 
+// Cell is alive when true or dead when false.
 type Cell bool
 
+// String returns "X" in case of a living Cell
+// and " " in case of a dead Cell.
 func (c Cell) String() string {
 	if c {
 		return "X"
@@ -33,7 +37,7 @@ func (c Cell) Int() int {
 
 // LivingNeighbours counts the numbers of living neighbour Cells in the top, right,
 // bottom, left and each corner.
-func (g *Game) LivingNeighbours(x, y int) int {
+func (g Game) LivingNeighbours(x, y int) int {
 	livingNeighbours := 0
 	for yDelta := -1; yDelta <= 1; yDelta++ {
 		for xDelta := -1; xDelta <= 1; xDelta++ {
@@ -83,7 +87,7 @@ func (g Game) safeGet(x, y int) Cell {
 }
 
 // Update computes a new state of the game.
-func (g Game) Update() {
+func (g *Game) Update() {
 	// Update each cell
 	for y := 0; y < len(g); y++ {
 		for x := 0; x < len(g[y]); x++ {
@@ -110,6 +114,7 @@ func NewGame(game [][]Cell) {
 	}
 }
 
+// String returns a grid of the current game state.
 func (g Game) String() string {
 	output := make([]string, len(g.Current))
 	for y := 0; y < len(g.Current); y++ {
